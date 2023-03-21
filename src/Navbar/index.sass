@@ -1,0 +1,130 @@
+$accent-color: #cc5b36
+
+.navbar
+  display: flex
+  justify-content: space-between
+  align-items: center
+  height: 70px
+  width: 100vw
+  padding: 0 1rem
+
+  &--dots 
+    position: absolute
+    bottom: 1.2rem
+    list-style: none
+    width: 100%
+    display: flex
+    justify-content: space-around
+
+    $dot-active-color: $accent-color
+    $dot-inactive-color: #999
+
+    &--dot 
+      --dot-color: #{$dot-inactive-color}
+      width: 100%
+      position: relative
+
+      &.active 
+        --dot-color: #{$dot-active-color}
+        &::after 
+          right: 50%
+
+      span 
+        position: absolute
+        top: 50%
+        left: 50%
+        display: block
+        width: 1.5rem
+        height: 1.5rem
+        background: var(--dot-color)
+        transition: background 1.5s ease
+        border-radius: 100%
+        transform: translate(-50%, -50%)
+
+      &:where(:not(:nth-child(1)))
+        &::before, &::after
+          content: ""
+          z-index: -1
+          position: absolute
+          background: var(--dot-color)
+          transition: background 1.5s ease
+          top: calc(50% - 2px)
+          bottom: calc(50% - 2px)
+
+        &::before
+          right: 50%
+          left: -50%
+
+        &::after 
+          left: -50%
+          right: 149%
+          background: $dot-active-color
+          transition: right 1s ease
+
+  &--island
+    position: relative
+    width: 100%
+    height: 100%
+
+  &--link
+    font-size: 1.2rem
+    font-weight: 600
+    background: $accent-color
+    color: white
+    padding: 1rem
+    width: 50px
+    height: 50px
+    line-height: 1
+    border-radius: 100%
+    text-align: center
+  
+  &--steps 
+    position: relative
+    list-style: none
+    width: 100%
+    height: 30px
+    display: flex
+    justify-content: space-around
+    font-size: 1.5rem
+
+    &::after, &::before
+      content: ""
+      position: absolute
+      top: 0 
+      bottom: 0
+
+    &::before
+      background: linear-gradient(90deg, #FFF, #FFF3, #0000)
+      left: 5rem
+      width: 10rem
+
+    &::after
+      background: linear-gradient(90deg, #0000, #FFF3, #FFF)
+      right: 5rem
+      width: 10rem
+
+
+    &--step 
+      width: max-content
+      position: absolute
+      text-align: center
+      transition: all 1.5s ease
+      z-index: -1
+      left: 50%
+
+      &.active 
+        transform: translateX(-50%)
+
+      &.waiting
+        width: fit-content
+        font-size: 1.1rem
+        &-left
+          left: 5rem
+
+        &-right
+          left: calc(90% - 5rem)
+
+      &.hidden
+        display: none
+
+
