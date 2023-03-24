@@ -77,6 +77,8 @@ $accent-color: #cc5b36
     line-height: 1
     border-radius: 100%
     text-align: center
+    border: none
+    cursor: pointer
   
   &--steps 
     position: relative
@@ -92,15 +94,16 @@ $accent-color: #cc5b36
       position: absolute
       top: 0 
       bottom: 0
+      z-index: -1
 
     &::before
-      background: linear-gradient(90deg, #FFF, #FFF3, #0000)
-      left: 5rem
+      background: linear-gradient(90deg, #FFF,  #0000)
+      left: 5%
       width: 10rem
 
     &::after
-      background: linear-gradient(90deg, #0000, #FFF3, #FFF)
-      right: 5rem
+      background: linear-gradient(90deg, #0000,  #FFF)
+      right: 5%
       width: 10rem
 
 
@@ -109,20 +112,20 @@ $accent-color: #cc5b36
       position: absolute
       text-align: center
       transition: all 1.5s ease
-      z-index: -1
       left: 50%
 
       &.active 
         transform: translateX(-50%)
 
       &.waiting
-        width: fit-content
+        z-index: -2
         font-size: 1.1rem
         &-left
-          left: 5rem
+          left: 10%
 
         &-right
-          left: calc(90% - 5rem)
+          left: 95%
+          transform: translateX(-100%)
 
       &.hidden
         display: none

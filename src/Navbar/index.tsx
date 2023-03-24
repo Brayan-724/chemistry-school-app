@@ -1,11 +1,13 @@
-import { Link } from "@solidjs/router";
+import { useNavigate } from "@solidjs/router";
 import "./index.sass";
 import { createSignal, For } from "solid-js";
 
-const steps = ["STEP 1", "STEP 2", "STEP 3", "STEP 4"];
+const steps = ["Data Register", "STEP 2", "STEP 3", "STEP 4"];
 
 export function Navbar() {
-  const [step] = createSignal(0);
+  const navigator = useNavigate();
+  const [step, setStep] = createSignal(parseInt(window.location.pathname.split("/").pop() ?? "0") || 0);
+  let isChanging = false;
 
   function getClassName(i: number): string {
     return step() == i
@@ -17,9 +19,31 @@ export function Navbar() {
       : "hidden";
   }
 
+  function getClassOfDot(i: number): string {
+    return step() >= i ? "active" : "";
+  }
+
+  function changeStep(delta: number) {
+    if (isChanging) return;
+    setStep((step) => {
+      if (step + delta < 0) return 0;
+      if (step + delta >= steps.length) return steps.length - 1;
+
+      isChanging = true;
+      setTimeout(() => isChanging = false, 1000);
+      navigator(`/step/${step + delta}`);
+      return step + delta;
+    });
+  }
+
   return (
     <nav class="navbar">
-      <Link class="navbar--link navbar--link-prev" href="/prev">&lt;</Link>
+      <button
+        class="navbar--link navbar--link-prev"
+        onClick={() => changeStep(-1)}
+      >
+        &lt;
+      </button>
       <div class="navbar--island">
         <ul class="navbar--steps">
           <li class={`navbar--steps--step ${getClassName(-1)}`} data-spacer />
@@ -36,18 +60,23 @@ export function Navbar() {
           />
         </ul>
         <ul class="navbar--dots">
-          <li class="navbar--dots--dot active">
-            <span />
-          </li>
-          <li class="navbar--dots--dot">
-            <span />
-          </li>
-          <li class="navbar--dots--dot">
-            <span />
-          </li>
+          <For each={steps}>
+            {(_item, index) => (
+              <li class={`navbar--dots--dot ${getClassOfDot(index())}`}>
+                <span />
+              </li>
+            )}
+          </For>
         </ul>
       </div>
-      <Link class="navbar--link navbar--link-next" href="/next">&gt;</Link>
+      <button
+        class="navbar--link navbar--link-next"
+        onClick={() => changeStep(1)}
+      >
+        &gt;
+      </button>
     </nav>
   );
 }
+
+// <Link class="navbar--link navbar--link-next" href="/next">&gt;</Link>
