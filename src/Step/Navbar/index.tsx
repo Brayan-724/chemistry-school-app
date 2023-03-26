@@ -1,12 +1,12 @@
 import { useNavigate } from "@solidjs/router";
+import { For } from "solid-js";
+import { steps } from "../list";
+import { useStepContext } from "..";
 import "./index.sass";
-import { createSignal, For } from "solid-js";
-
-const steps = ["Data Register", "STEP 2", "STEP 3", "STEP 4"];
 
 export function Navbar() {
+  const { actualStep: step, jumpTo } = useStepContext()!;
   const navigator = useNavigate();
-  const [step, setStep] = createSignal(parseInt(window.location.pathname.split("/").pop() ?? "0") || 0);
   let isChanging = false;
 
   function getClassName(i: number): string {
@@ -25,15 +25,12 @@ export function Navbar() {
 
   function changeStep(delta: number) {
     if (isChanging) return;
-    setStep((step) => {
-      if (step + delta < 0) return 0;
-      if (step + delta >= steps.length) return steps.length - 1;
+    if (step() + delta < 0) return jumpTo(0);
+    if (step() + delta >= steps.length) return jumpTo(steps.length - 1);
 
-      isChanging = true;
-      setTimeout(() => isChanging = false, 1000);
-      navigator(`/step/${step + delta}`);
-      return step + delta;
-    });
+    isChanging = true;
+    setTimeout(() => isChanging = false, 1000);
+    navigator(`/step/${step() + delta}`);
   }
 
   return (
@@ -50,7 +47,7 @@ export function Navbar() {
           <For each={steps}>
             {(item, index) => (
               <li class={`navbar--steps--step ${getClassName(index())}`}>
-                <span>{item}</span>
+                <span>{item.name}</span>
               </li>
             )}
           </For>
