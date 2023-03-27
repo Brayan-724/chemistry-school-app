@@ -17,7 +17,7 @@ export const steps: Step[] = [
   newStep(
     "Data Register",
     lazy(() =>
-      import("./steps/1")
+      import("./steps/DataRegister")
     ),
   ),
 ];
