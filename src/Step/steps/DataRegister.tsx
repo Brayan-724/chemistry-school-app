@@ -1,33 +1,71 @@
 import { DataTable } from "../../DataTable";
-import "./DataRegister.sass"
+import "./DataRegister.sass";
+import { IDataTableHeader } from "../../DataTable/context";
+import { IData, useDataContext } from "../DataContext";
+import { DataTableUpdateableCell } from "../../DataTable/UpdateableCell";
 
 export default function Step_DataRegister() {
+  const { data } = useDataContext()!;
+
+  const headers = new Map<string, IDataTableHeader<IData, keyof IData>>();
+  headers.set("wavelength", {
+    title: ["Wavelength (nm)", "Wave (nm)", "W (nm)"],
+    cell: DataTableUpdateableCell<IData>({
+      updateValue(cell, newValue) {
+        data.set(cell.idx, newValue);
+      },
+      process(cell, { currentTarget }) {
+        const newValue = parseInt(currentTarget.value);
+        if (Number.isNaN(newValue)) {
+          currentTarget.value = cell.value;
+          return [false, null];
+        }
+        return [true, newValue];
+      },
+    }),
+  });
+  headers.set("intensity", {
+    title: ["Intensity (lm)", "Int (lm)", "I (lm)"],
+    cell: DataTableUpdateableCell<IData>({
+      updateValue(cell, newValue) {
+        data.set(cell.idx, newValue);
+      },
+      process(cell, { currentTarget }) {
+        const newValue = parseInt(currentTarget.value);
+        if (Number.isNaN(newValue)) {
+          currentTarget.value = cell.value;
+          return [false, null];
+        }
+        return [true, newValue];
+      },
+    }),
+  });
+  headers.set("absorbance", {
+    title: ["Absorbance (U)", "Abs (U)", "A (U)"],
+  });
+  headers.set("concentration", {
+    title: ["Concentration (n/L)", "Con (n/L)", "C (n/L)"],
+    cell: DataTableUpdateableCell<IData>({
+      updateValue(cell, newValue) {
+        data.set(cell.idx, newValue);
+      },
+      process(cell, { currentTarget }) {
+        const newValue = parseInt(currentTarget.value);
+        if (Number.isNaN(newValue)) {
+          currentTarget.value = cell.value;
+          return [false, null];
+        }
+        return [true, newValue];
+      },
+    }),
+  });
+
   return (
     <div>
       <DataTable
-        headers={new Map([
-          ["wavelength", ["Wavelength (nm)", "Wave (nm)", "W (nm)"]],
-          ["intensity", ["Intensity (lm)", "Int (lm)", "I (lm)"]],
-          ["absorbance", ["Absorbance (U)", "Abs (U)", "A (U)"]],
-          ["concentration", ["Concentration (n/L)", "Con (n/L)", "C (n/L)"]],
-        ])}
-        data={new Map([[0, {
-          wavelength: 460,
-          intensity: 88.36,
-          absorbance: 3,
-          concentration: 5.84,
-        }], [1, {
-          wavelength: 460,
-          intensity: 88.27,
-          absorbance: 3,
-          concentration: 6,
-        }], [2, {
-          wavelength: 460,
-          intensity: 90,
-          absorbance: 3,
-          concentration: 8,
-        }]])}
-        formatCell={(key, value) => {
+        headers={headers}
+        data={data}
+        formatCell={(key, { value }) => {
           if (key === "wavelength") return value.toString();
           return value.toFixed(4);
         }}
@@ -52,7 +90,15 @@ export default function Step_DataRegister() {
           </span>
           <input type="number" />
         </label>
-        <button>
+        <button
+          onClick={() =>
+            data.set(data.size, {
+              wavelength: 460,
+              intensity: 90,
+              absorbance: 3,
+              concentration: 8,
+            })}
+        >
           ADD
         </button>
       </div>

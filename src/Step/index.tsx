@@ -8,6 +8,7 @@ import {
 import { steps } from "./list";
 import { Navigate, useParams } from "@solidjs/router";
 import { StepLayout } from "./StepLayout";
+import { DataProvider } from "./DataContext";
 
 export interface IStepContext {
   actualStep: Accessor<number>;
@@ -39,7 +40,9 @@ export function StepProvider(
     <StepContext.Provider
       value={{ actualStep: step, jumpTo, nextStep, prevStep }}
     >
-      {props.children}
+      <DataProvider>
+        {props.children}
+      </DataProvider>
     </StepContext.Provider>
   );
 }
