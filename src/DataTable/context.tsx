@@ -1,53 +1,53 @@
-import { batch, createContext, ParentProps, useContext } from "solid-js";
-import { createMutable } from "solid-js/store";
+import { Component, createContext, ParentProps, useContext } from "solid-js";
+
+export interface IDataTableCell<T = unknown, O = Record<string, T>> {
+  value: T;
+  obj: O;
+  idx: number;
+}
+
+export interface IDataTableHeader<O = Record<string, T>, K = keyof O> {
+  title: [string] | [string, string] | [string, string, string];
+  cell?: Component<IDataTableCell<string, O> & { key: K }>;
+}
 
 export interface IDataTableContext {
-  headers: Map<string, [string, string, string]>;
-  selects: Set<number>;
+  actions: Set<Component<IDataTableCell<never>>>;
+  headers: Map<string, Required<IDataTableHeader>>;
   data: Map<number, Record<string, unknown>>;
-  selectAll(): void;
-  formatCell(key: string, value: unknown, obj: object, idx: number): string;
+  formatCell(key: string, cell: IDataTableCell): string;
 }
 
 export const DataTableContext = createContext<IDataTableContext>();
 
 export type DataTableProviderProps<T extends Record<string, unknown>> =
-  ParentProps<
-    Pick<IDataTableContext, "headers"> & {
-      formatCell?: <K extends keyof T>(
-        key: K,
-        value: T[K],
-        obj: T,
-        idx: number,
-      ) => string;
-      data: Map<number, T>;
-    }
-  >;
+  ParentProps<{
+    headers: Map<string, IDataTableHeader<T>>;
+    actions?: Set<Component<IDataTableCell<never, T>>>;
+    formatCell?: <K extends keyof T>(
+      key: K,
+      cell: IDataTableCell<T[K], T>,
+    ) => string;
+    data: Map<number, T>;
+  }>;
 
 export function DataTableProvider<T extends Record<string, unknown>>(
   props: DataTableProviderProps<T>,
 ) {
-  const _selects = new Set<number>();
-  const selects = createMutable(_selects);
-
-  function selectAll() {
-    batch(() => {
-      selects.clear();
-      props.data.forEach((_, idx) => {
-        selects.add(idx);
-      });
-    });
-  }
-
   return (
     <DataTableContext.Provider
       value={{
-        headers: props.headers,
-        selects,
+        get headers() {
+          props.headers.forEach((header) => {
+            header.cell ??= ({ value }) => <>{value}</>;
+          });
+
+          return props.headers as IDataTableContext["headers"];
+        },
+        actions: (props.actions ?? new Set()) as IDataTableContext["actions"],
         data: props.data,
-        selectAll,
-        formatCell:
-          (props.formatCell ?? ((_, value) => `${value}`)) as IDataTableContext[
+        formatCell: (props.formatCell ?? ((_, cell) =>
+          `${cell.value}`)) as IDataTableContext[
             "formatCell"
           ],
       }}

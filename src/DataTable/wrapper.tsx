@@ -13,11 +13,11 @@ export function DataTableWrapper() {
             <input type="checkbox" />
           </th>
           <For each={[...dataTable.headers.values()]}>
-            {([lg, md, sm]) => (
+            {({ title }) => (
               <th scope="col">
-                <span class="break-lg">{lg}</span>
-                <span class="break-md">{md}</span>
-                <span class="break-sm">{sm}</span>
+                <span class="break-lg">{title[0]}</span>
+                <span class="break-md">{title[1] ?? title[0]}</span>
+                <span class="break-sm">{title[2] ?? title[1] ?? title[0]}</span>
               </th>
             )}
           </For>
@@ -25,7 +25,7 @@ export function DataTableWrapper() {
       </thead>
       <tbody>
         <For each={[...dataTable.data.keys()]}>
-          {(key) => <DataTableRow key={key} />}
+          {(key) => <DataTableRow id={key} />}
         </For>
       </tbody>
     </table>

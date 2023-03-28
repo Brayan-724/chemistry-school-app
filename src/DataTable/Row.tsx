@@ -1,9 +1,9 @@
 import { createMemo, createSignal, For } from "solid-js";
 import { useDataTable } from "./context";
 
-export function DataTableRow({ key }: { key: number }) {
+export function DataTableRow({ id }: { id: number }) {
   const dataTable = useDataTable()!;
-  const data = createMemo(() => dataTable.data.get(key)!);
+  const data = createMemo(() => dataTable.data.get(id)!);
   const [checked, setChecked] = createSignal(false);
 
   return (
@@ -14,8 +14,21 @@ export function DataTableRow({ key }: { key: number }) {
           onClick={(e) => setChecked(e.currentTarget.checked)}
         />
       </th>
-      <For each={[...dataTable.headers.keys()]}>
-        {(header) => <td>{dataTable.formatCell(header, data()[header], data(), key)}</td>}
+      <For each={[...dataTable.headers.entries()]}>
+        {([key, header]) => (
+          <td>
+            <header.cell
+              value={dataTable.formatCell(key, {
+                value: data()[key],
+                obj: data(),
+                idx: id,
+              })}
+              key={key}
+              obj={data()}
+              idx={id}
+            />
+          </td>
+        )}
       </For>
     </tr>
   );
