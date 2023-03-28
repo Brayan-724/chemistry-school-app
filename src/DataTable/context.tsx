@@ -6,7 +6,7 @@ export interface IDataTableCell<T = unknown, O = Record<string, T>> {
   idx: number;
 }
 
-export interface IDataTableHeader<O = Record<string, T>, K = keyof O> {
+export interface IDataTableHeader<O = unknown, K = string> {
   title: [string] | [string, string] | [string, string, string];
   cell?: Component<IDataTableCell<string, O> & { key: K }>;
 }
@@ -14,24 +14,23 @@ export interface IDataTableHeader<O = Record<string, T>, K = keyof O> {
 export interface IDataTableContext {
   actions: Set<Component<IDataTableCell<never>>>;
   headers: Map<string, Required<IDataTableHeader>>;
-  data: Map<number, Record<string, unknown>>;
+  data: Map<number, unknown>;
   formatCell(key: string, cell: IDataTableCell): string;
 }
 
 export const DataTableContext = createContext<IDataTableContext>();
 
-export type DataTableProviderProps<T extends Record<string, unknown>> =
-  ParentProps<{
-    headers: Map<string, IDataTableHeader<T>>;
-    actions?: Set<Component<IDataTableCell<never, T>>>;
-    formatCell?: <K extends keyof T>(
-      key: K,
-      cell: IDataTableCell<T[K], T>,
-    ) => string;
-    data: Map<number, T>;
-  }>;
+export type DataTableProviderProps<T> = ParentProps<{
+  headers: Map<string, IDataTableHeader<T, keyof T>>;
+  actions?: Set<Component<IDataTableCell<never, T>>>;
+  formatCell?: <K extends keyof T>(
+    key: K,
+    cell: IDataTableCell<T[K], T>,
+  ) => string;
+  data: Map<number, T>;
+}>;
 
-export function DataTableProvider<T extends Record<string, unknown>>(
+export function DataTableProvider<T>(
   props: DataTableProviderProps<T>,
 ) {
   return (

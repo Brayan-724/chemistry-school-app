@@ -14,7 +14,7 @@ export function DataTableWrapper() {
           </th>
           <For each={[...dataTable.headers.values()]}>
             {({ title }) => (
-              <th scope="col">
+              <th scope="col" title={title[0]}>
                 <span class="break-lg">{title[0]}</span>
                 <span class="break-md">{title[1] ?? title[0]}</span>
                 <span class="break-sm">{title[2] ?? title[1] ?? title[0]}</span>
