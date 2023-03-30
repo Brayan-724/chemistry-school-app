@@ -1,7 +1,9 @@
 import { ReactiveMap } from "@solid-primitives/map";
 import {
+    Accessor,
   createContext,
   createEffect,
+  createSignal,
   on,
   ParentProps,
   useContext,
@@ -16,12 +18,15 @@ export interface IData {
 }
 
 export type IDataContext = {
+  intensity: Accessor<number>;
+  setIntensity(newValue: number): void
   data: Map<number, IData>;
 };
 
 export const DataContext = createContext<IDataContext>();
 
 export function DataProvider(props: ParentProps) {
+  const [intensity, setIntensity] = createSignal(1);
   const [data, _, save] = createLocalStorage<ReactiveMap<number, IData>>(
     "registry",
     new ReactiveMap(
@@ -53,7 +58,7 @@ export function DataProvider(props: ParentProps) {
   createEffect(on(() => data.entries(), () => save()));
 
   return (
-    <DataContext.Provider value={{ data }}>
+    <DataContext.Provider value={{ intensity, setIntensity, data }}>
       {props.children}
     </DataContext.Provider>
   );
