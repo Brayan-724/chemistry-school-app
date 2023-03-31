@@ -1,9 +1,9 @@
 import { defineConfig } from 'vite';
 import solidPlugin from 'vite-plugin-solid';
-import WindiCSS from 'vite-plugin-windicss';
+import tsconfigPlugin from "vite-tsconfig-paths"
 
 export default defineConfig({
-  plugins: [solidPlugin(), WindiCSS()],
+  plugins: [solidPlugin(), tsconfigPlugin()],
   server: {
     port: 3000,
   },
