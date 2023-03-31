@@ -1,7 +1,15 @@
-import { Component, createContext, ParentProps, useContext } from "solid-js";
+import {
+  Accessor,
+  Component,
+  createContext,
+  ParentProps,
+  useContext,
+} from "solid-js";
+
+type DataTableCellValue<T> = T extends Accessor<infer R> ? R : T;
 
 export interface IDataTableCell<T = unknown, O = Record<string, T>> {
-  value: T;
+  value: Accessor<T>;
   obj: O;
   idx: number;
 }
@@ -25,7 +33,7 @@ export type DataTableProviderProps<T> = ParentProps<{
   actions?: Set<Component<IDataTableCell<never, T>>>;
   formatCell?: <K extends keyof T>(
     key: K,
-    cell: IDataTableCell<T[K], T>,
+    cell: IDataTableCell<DataTableCellValue<T[K]>, T>,
   ) => string;
   data: Map<number, T>;
 }>;
