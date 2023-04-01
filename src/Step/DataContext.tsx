@@ -29,8 +29,14 @@ export type IDataContext = {
 export const DataContext = createContext<IDataContext>();
 
 export function DataProvider(props: ParentProps) {
-  const [intensity, setIntensity] = createSignal(2);
-  const [data, _, save] = createLocalStorage<ReactiveMap<number, IData>>(
+  const [intensity, setIntensity] = createSignal(1);
+  const [savedIntensity, saveInstensity] = createLocalStorage(
+    "intensity",
+    intensity,
+  );
+  setIntensity(savedIntensity);
+
+  const [data, , save] = createLocalStorage<ReactiveMap<number, IData>>(
     "registry",
     new ReactiveMap(
       [[
@@ -71,7 +77,17 @@ export function DataProvider(props: ParentProps) {
   createEffect(on(() => data.entries(), () => save()));
 
   return (
-    <DataContext.Provider value={{ intensity, setIntensity, data, save }}>
+    <DataContext.Provider
+      value={{
+        intensity: intensity,
+        setIntensity: (v) => {
+          setIntensity(v);
+          saveInstensity(v);
+        },
+        data,
+        save,
+      }}
+    >
       {props.children}
     </DataContext.Provider>
   );

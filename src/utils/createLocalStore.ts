@@ -1,24 +1,36 @@
-import { Accessor, createEffect, on, Setter } from "solid-js";
+import { on } from "solid-js";
+import { Accessor, createMemo, Setter } from "solid-js";
 
-export default function createLocalStorage<T extends object>(
+export default function createLocalStorage<
+  K,
+  T = K extends Accessor<infer R> ? R : K,
+>(
   key: string,
-  defaultValue: T,
+  defaultValue: K,
   preProcessor?: (val: T) => string,
   postProcessor?: (val: string) => T,
 ): T extends (...args: never) => unknown ? unknown
-  : [get: T, set: Setter<T>, save: Accessor<void>];
+  : [get: K, set: Setter<T>, save: Accessor<void>];
 
-export default function createLocalStorage<T extends object>(
+export default function createLocalStorage<
+  K,
+  T = K extends Accessor<infer R> ? R : K,
+>(
   key: string,
-  defaultValue: T,
+  defaultValue: K,
   preProcessor?: (val: T) => string,
   postProcessor?: (val: string) => T,
-): [T, Setter<T>, Accessor<void>] {
+): [K, Setter<T>, VoidFunction] {
   const storage = window.localStorage;
+  const isAccessor = typeof defaultValue === "function";
   const storedValue = storage.getItem(key);
-  const value: T = storedValue
-    ? (postProcessor ?? JSON.parse)(storedValue)
-    : (defaultValue);
+  const value: Accessor<T> = createMemo(
+    on(() =>
+      defaultValue, () =>
+      storedValue
+        ? (postProcessor ?? JSON.parse)(storedValue) as K
+        : (isAccessor ? defaultValue() : defaultValue)),
+  );
 
   const save = (val: T) =>
     storage.setItem(
@@ -26,19 +38,21 @@ export default function createLocalStorage<T extends object>(
       preProcessor ? preProcessor(val) : JSON.stringify(val),
     );
 
-  if (!storedValue) save(value);
-
-  createEffect(on(() => value, (value) => {
-    save(value);
-  }));
+  if (!storedValue) save(value());
 
   const newSetValue = (newValue: T | ((v: T) => T)): T => {
-    const _val: T = typeof newValue === "function" ? newValue(value) : newValue;
+    const _val: T = typeof newValue === "function"
+      ? (newValue as Function)(value)
+      : newValue;
 
     save(_val);
 
     return _val;
   };
 
-  return [value, newSetValue as Setter<T>, () => save(value)];
+  return [
+    (isAccessor ? value : value()) as K,
+    newSetValue as Setter<T>,
+    () => save(value()),
+  ];
 }
