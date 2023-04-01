@@ -10,6 +10,7 @@ import {
 } from "solid-js";
 import createLocalStorage from "@/utils/createLocalStore";
 import { createTrigger } from "@solid-primitives/trigger";
+import { calcAbsorbance } from "@/utils/chemistry";
 
 export interface IData {
   wavelength: number;
@@ -109,9 +110,8 @@ export function createReactiveData(
       if (!dataContext) throw new Error("No Data Provider");
 
       track();
-      console.log(ret);
 
-      return ret.intensity / dataContext.intensity();
+      return calcAbsorbance(dataContext.intensity(), ret.intensity);
     },
     update,
   };

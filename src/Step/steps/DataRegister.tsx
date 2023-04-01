@@ -38,10 +38,10 @@ export default function Step_DataRegister() {
     cell: UpdateableCell({}),
   });
   headers.set("absorbance", {
-    title: ["Absorbance (U)", "Abs (U)", "A (U)"],
+    title: ["Absorbance", "Abs", "A"],
   });
   headers.set("concentration", {
-    title: ["Concentration (n/L)", "Con (n/L)", "C (n/L)"],
+    title: ["Concentration (M)", "Con (M)", "C (M)"],
     cell: UpdateableCell({}),
   });
 
