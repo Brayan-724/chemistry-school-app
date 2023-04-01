@@ -39,7 +39,7 @@ export function Navbar() {
         class="navbar--link navbar--link-prev"
         onClick={() => changeStep(-1)}
       >
-        &lt;
+        ▲
       </button>
       <div class="navbar--island">
         <ul class="navbar--steps">
@@ -70,7 +70,7 @@ export function Navbar() {
         class="navbar--link navbar--link-next"
         onClick={() => changeStep(1)}
       >
-        &gt;
+        ▲
       </button>
     </nav>
   );
