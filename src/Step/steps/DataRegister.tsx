@@ -1,9 +1,45 @@
 import { createStore } from "solid-js/store";
+import { SolidApexCharts } from "solid-apexcharts";
+import { ApexOptions } from "apexcharts";
 import { DataTable } from "@/DataTable";
 import { IDataTableHeader } from "@/DataTable/context";
 import { createUpdateableCell } from "@/DataTable/UpdateableCell";
 import { createReactiveData, IData, useDataContext } from "../DataContext";
 import "./DataRegister.sass";
+
+const chartFilename = { filename: "data-register-spectrometer" };
+const getChartTitle = (t: string) => ({ text: t });
+const chartOptions: ApexOptions = {
+  chart: {
+    toolbar: {
+      tools: {
+        download: true,
+        selection: false,
+        zoom: false,
+        zoomin: false,
+        zoomout: false,
+        pan: false,
+        reset: true,
+      },
+      export: {
+        csv: chartFilename,
+        svg: chartFilename,
+        png: chartFilename,
+      },
+    },
+  },
+  xaxis: {
+    title: getChartTitle("Concentration"),
+  },
+  yaxis: {
+    title: getChartTitle("Absorbance"),
+    labels: {
+      formatter(v) {
+        return v.toPrecision(3);
+      },
+    },
+  },
+};
 
 export default function Step_DataRegister() {
   const { data, intensity, setIntensity, save } = useDataContext()!;
@@ -45,51 +81,31 @@ export default function Step_DataRegister() {
     cell: UpdateableCell({}),
   });
 
+  const FormInput = (
+    props: { title: string; key: keyof typeof formData },
+  ) => (
+    <label>
+      <span>
+        {props.title}
+      </span>
+      <input
+        type="number"
+        value={formData[props.key]}
+        onChange={(e) =>
+          setFormData((f) => ({
+            ...f,
+            [props.key]: parseFloat(e.currentTarget.value),
+          }))}
+      />
+    </label>
+  );
+
   return (
     <div>
       <div class="data-register-form">
-        <label>
-          <span>
-            Wavelength
-          </span>
-          <input
-            type="number"
-            value={formData.wavelength}
-            onChange={(e) =>
-              setFormData((f) => ({
-                ...f,
-                "wavelength": parseFloat(e.currentTarget.value),
-              }))}
-          />
-        </label>
-        <label>
-          <span>
-            Intensity
-          </span>
-          <input
-            type="number"
-            value={formData.intensity}
-            onChange={(e) =>
-              setFormData((f) => ({
-                ...f,
-                "intensity": parseFloat(e.currentTarget.value),
-              }))}
-          />
-        </label>
-        <label>
-          <span>
-            Concentration
-          </span>
-          <input
-            type="number"
-            value={formData.concentration}
-            onChange={(e) =>
-              setFormData((f) => ({
-                ...f,
-                "concentration": parseFloat(e.currentTarget.value),
-              }))}
-          />
-        </label>
+        <FormInput title="Wavelength" key="wavelength" />
+        <FormInput title="Intensity" key="intensity" />
+        <FormInput title="Concentration" key="concentration" />
         <button
           onClick={() =>
             data.set(
@@ -113,6 +129,20 @@ export default function Step_DataRegister() {
             onChange={(e) => setIntensity(parseFloat(e.currentTarget.value))}
           />
         </label>
+      </div>
+      <div class="data-register-chart">
+        <SolidApexCharts
+          width="100%"
+          series={[{
+            name: "Absorbance",
+            data: [...data.values()].map((v) => ({
+              x: v.concentration,
+              y: v.absorbance(),
+            })),
+          }]}
+          type="scatter"
+          options={chartOptions}
+        />
       </div>
       <DataTable
         headers={headers}
