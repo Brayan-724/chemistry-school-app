@@ -6,6 +6,7 @@ import { IDataTableHeader } from "@/DataTable/context";
 import { createUpdateableCell } from "@/DataTable/UpdateableCell";
 import { createReactiveData, IData, useDataContext } from "../DataContext";
 import "./DataRegister.sass";
+import { calcEpsilon } from "@/utils/chemistry";
 
 const chartFilename = { filename: "data-register-spectrometer" };
 const getChartTitle = (t: string) => ({ text: t });
@@ -19,7 +20,7 @@ const chartOptions: ApexOptions = {
         zoomin: false,
         zoomout: false,
         pan: false,
-        reset: true,
+        reset: false,
       },
       export: {
         csv: chartFilename,
@@ -28,26 +29,53 @@ const chartOptions: ApexOptions = {
       },
     },
   },
+  fill: {
+    type: "solid",
+  },
   xaxis: {
     title: getChartTitle("Concentration"),
+    type: "numeric",
+    min: 0,
+    tickAmount: 10,
+    decimalsInFloat: 3,
   },
   yaxis: {
     title: getChartTitle("Absorbance"),
+    min: 0,
     labels: {
       formatter(v) {
         return v.toPrecision(3);
       },
     },
   },
+  tooltip: {
+    shared: false,
+    intersect: true,
+  },
+  markers: {
+    size: [6, 0],
+  },
+  legend: {
+      show: false
+    }
 };
 
 export default function Step_DataRegister() {
-  const { data, intensity, setIntensity, save } = useDataContext()!;
+  const { data, intensity, setIntensity, save, createComputed: dataComputed } =
+    useDataContext()!;
   const [formData, setFormData] = createStore({
     wavelength: 460,
     intensity: 90,
     concentration: 5,
   });
+  const epsilon = () =>
+    calcEpsilon(
+      dataComputed(null, ([, v]) => (v.absorbance() / v.concentration))(),
+    );
+  const maxX = () =>
+    Math.max(
+      ...(dataComputed(null, ([, v]) => v.concentration)()),
+    );
   const UpdateableCell = createUpdateableCell<IData>({
     updateValue(cell, _, newValue) {
       cell.obj[cell.key] = newValue as any;
@@ -135,13 +163,37 @@ export default function Step_DataRegister() {
           width="100%"
           series={[{
             name: "Absorbance",
-            data: [...data.values()].map((v) => ({
+            type: "scatter",
+            data: dataComputed(null, ([_, v]) => ({
               x: v.concentration,
               y: v.absorbance(),
-            })),
+            }))(),
+          }, {
+            name: "Line",
+            type: "line",
+            data: [{
+              x: 0,
+              y: 0,
+            }, {
+              x: maxX() * 1.05,
+              y: epsilon() * maxX() * 1.05,
+            }],
           }]}
-          type="scatter"
-          options={chartOptions}
+          type="line"
+          options={{
+            ...chartOptions,
+
+            yaxis: {
+              ...chartOptions.yaxis,
+              max: Math.max(
+                ...(dataComputed(null, ([, v]) => v.absorbance())()),
+              ) * 1.05,
+            },
+            xaxis: {
+              ...chartOptions.xaxis,
+              max: maxX() * 1.05,
+            },
+          }}
         />
       </div>
       <DataTable
@@ -156,3 +208,6 @@ export default function Step_DataRegister() {
     </div>
   );
 }
+/*
+
+            */

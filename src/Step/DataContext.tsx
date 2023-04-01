@@ -3,6 +3,7 @@ import {
   Accessor,
   createContext,
   createEffect,
+  createMemo,
   createSignal,
   on,
   ParentProps,
@@ -25,6 +26,14 @@ export type IDataContext = {
   setIntensity(newValue: number): void;
   data: Map<number, IData>;
   save: VoidFunction;
+  createComputed<T>(
+    key: null,
+    callback: (v: [number, IData]) => T,
+  ): Accessor<T[]>;
+  createComputed<T>(
+    key: Accessor<number>,
+    callback: (v: IData) => T,
+  ): Accessor<T>;
 };
 
 export const DataContext = createContext<IDataContext>();
@@ -87,6 +96,21 @@ export function DataProvider(props: ParentProps) {
         },
         data,
         save,
+        createComputed(key, callback) {
+          // FUCK TS
+          type _VALUE = [number, IData] & IData;
+
+          return createMemo(() => {
+            if (key === null) {
+              return [...data.entries()].map((v) => callback(v as _VALUE));
+            }
+
+            const _key = key();
+            const v = data.get(_key);
+            if (!v) throw new Error("Data doesn't exist: " + key);
+            return callback(v as _VALUE);
+          });
+        },
       }}
     >
       {props.children}
