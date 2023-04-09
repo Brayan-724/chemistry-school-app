@@ -56,8 +56,8 @@ const chartOptions: ApexOptions = {
     size: [6, 0],
   },
   legend: {
-      show: false
-    }
+    show: false,
+  },
 };
 
 export default function Step_DataRegister() {
@@ -204,10 +204,10 @@ export default function Step_DataRegister() {
           if (key === "wavelength") return value.toString();
           return value.toPrecision(4);
         }}
+        onDelete={(cell) => {
+          data.delete(cell.idx);
+        }}
       />
     </div>
   );
 }
-/*
-
-            */

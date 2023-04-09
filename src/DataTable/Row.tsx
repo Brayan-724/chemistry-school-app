@@ -1,6 +1,7 @@
 import { For, getOwner, runWithOwner } from "solid-js";
 import { Dynamic } from "solid-js/web";
 import { IDataTableCell, useDataTable } from "./context";
+import { TrashIcon } from "@/icons/trash";
 
 export function DataTableRow({ id }: { id: number }) {
   const dataTable = useDataTable()!;
@@ -10,6 +11,13 @@ export function DataTableRow({ id }: { id: number }) {
   return (
     <tr>
       <th>
+        <button
+          class="data-table--delete"
+          onClick={() =>
+            dataTable.onDelete({ value: () => data(), obj: data(), idx: id })}
+        >
+          <TrashIcon />
+        </button>
       </th>
       <For each={[...dataTable.headers.entries()]}>
         {([key, header]) => (

@@ -24,6 +24,7 @@ export interface IDataTableContext {
   headers: Map<string, Required<IDataTableHeader>>;
   data: Map<number, unknown>;
   formatCell(key: string, cell: IDataTableCell): string;
+  onDelete(cell: IDataTableCell): void;
 }
 
 export const DataTableContext = createContext<IDataTableContext>();
@@ -36,6 +37,7 @@ export type DataTableProviderProps<T> = ParentProps<{
     cell: IDataTableCell<DataTableCellValue<T[K]>, T>,
   ) => string;
   data: Map<number, T>;
+  onDelete(cell: IDataTableCell<never, T>): void;
 }>;
 
 export function DataTableProvider<T>(
@@ -57,6 +59,7 @@ export function DataTableProvider<T>(
           `${cell.value}`)) as IDataTableContext[
             "formatCell"
           ],
+        onDelete: props.onDelete as IDataTableContext["onDelete"],
       }}
     >
       {props.children}
