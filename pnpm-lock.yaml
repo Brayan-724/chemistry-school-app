@@ -6,6 +6,7 @@ specifiers:
   '@solidjs/router': ^0.7.0
   apexcharts: ^3.37.2
   sass: ^1.59.3
+  simple-statistics: ^7.8.3
   solid-apexcharts: ^0.2.4
   solid-js: ^1.6.16
   vite: ^4.1.1
@@ -19,6 +20,7 @@ dependencies:
   '@solidjs/router': 0.7.0_solid-js@1.6.16
   apexcharts: 3.37.2
   sass: 1.59.3
+  simple-statistics: 7.8.3
   solid-apexcharts: 0.2.4_335zwgnq3at7knqdwi7f64qhtu
   solid-js: 1.6.16
   vite-tsconfig-paths: 4.0.7_vite@4.1.1
@@ -1053,6 +1055,10 @@ packages:
     resolution: {integrity: sha512-b39TBaTSfV6yBrapU89p5fKekE2m/NwnDocOVruQFS1/veMgdzuPcnOM34M6CwxW8jH/lxEa5rBoDeUwu5HHTw==}
     hasBin: true
     dev: true
+
+  /simple-statistics/7.8.3:
+    resolution: {integrity: sha512-JFvMY00t6SBGtwMuJ+nqgsx9ylkMiJ5JlK9bkj8AdvniIe5615wWQYkKHXe84XtSuc40G/tlrPu0A5/NlJvv8A==}
+    dev: false
 
   /solid-apexcharts/0.2.4_335zwgnq3at7knqdwi7f64qhtu:
     resolution: {integrity: sha512-8SJ48UrCSZOE2HzF9a3LKbUccnHxhCCTDgIMciWUPdIBxW7GpalRh/HcJapa4Lc6khP1scKhS3M7iKc+uUU7yg==}

@@ -7,17 +7,21 @@ export interface Step {
   withLayout: Component;
 }
 
-const newStep = (name: string, component: Component): Step => ({
+const newStep = (name: string, component: Component, idx: number): Step => ({
   name,
   component,
-  withLayout: withStepLayout(component),
+  withLayout: withStepLayout(component, idx),
 });
 
 export const steps: Step[] = [
   newStep(
     "Data Register",
-    lazy(() =>
-      import("./steps/DataRegister")
-    ),
+    lazy(() => import("./steps/DataRegister")),
+    0,
+  ),
+  newStep(
+    "Use Case",
+    lazy(() => import("./steps/UseCase")),
+    1,
   ),
 ];

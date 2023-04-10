@@ -53,22 +53,29 @@ export function DataProvider(props: ParentProps) {
         0,
         createReactiveData({
           wavelength: 460,
-          intensity: 88.36,
-          concentration: 5.84,
+          intensity: 1.25,
+          concentration: 0.01,
         }),
       ], [
         1,
         createReactiveData({
           wavelength: 460,
-          intensity: 88.27,
-          concentration: 6,
+          intensity: 1.5,
+          concentration: 0.02,
         }),
       ], [
         2,
         createReactiveData({
           wavelength: 460,
-          intensity: 90,
-          concentration: 8,
+          intensity: 1.75,
+          concentration: 0.03,
+        }),
+      ], [
+        4,
+        createReactiveData({
+          wavelength: 460,
+          intensity: 2,
+          concentration: 0.04,
         }),
       ]],
     ),

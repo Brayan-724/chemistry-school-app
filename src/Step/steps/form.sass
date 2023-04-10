@@ -1,0 +1,23 @@
+@mixin complete-form
+  padding: 0 1rem
+  display: flex
+  flex-direction: column
+  gap: 1rem
+  max-width: 600px
+  margin: 0 auto
+
+  label
+    display: flex
+    flex-direction: column
+
+    input
+      padding: .3rem .5rem
+      font-size: 1.1rem
+
+  button
+    background: $accent-color
+    color: white
+    border: transparent 2px solid
+    padding: .5rem 1rem
+    border-radius: 3px
+    cursor: pointer

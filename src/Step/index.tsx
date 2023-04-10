@@ -6,7 +6,7 @@ import {
   useContext,
 } from "solid-js";
 import { steps } from "./list";
-import { Navigate, useParams } from "@solidjs/router";
+import { Navigate, Outlet, useParams } from "@solidjs/router";
 import { StepLayout } from "./StepLayout";
 import { DataProvider } from "./DataContext";
 
@@ -59,6 +59,19 @@ export function StepFallback() {
 
   return (
     <StepLayout step={step}>
+    </StepLayout>
+  );
+}
+
+export function StepRouter() {
+  let step = parseInt(window.location.pathname.split("/").pop() ?? "0") || 0;
+
+  if (step >= steps.length || step < 0 || Number.isNaN(step)) {
+    return <Navigate href="/step/0" />;
+  }
+  return (
+    <StepLayout step={step}>
+      <Outlet />
     </StepLayout>
   );
 }

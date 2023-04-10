@@ -1,5 +1,4 @@
 import { createStore } from "solid-js/store";
-import { SolidApexCharts } from "solid-apexcharts";
 import { ApexOptions } from "apexcharts";
 import { DataTable } from "@/DataTable";
 import { IDataTableHeader } from "@/DataTable/context";
@@ -7,6 +6,11 @@ import { createUpdateableCell } from "@/DataTable/UpdateableCell";
 import { createReactiveData, IData, useDataContext } from "../DataContext";
 import "./DataRegister.sass";
 import { calcEpsilon } from "@/utils/chemistry";
+import { createMemo, lazy, Suspense } from "solid-js";
+
+const SolidApexCharts = lazy(() =>
+  import("solid-apexcharts").then((mod) => ({ default: mod.SolidApexCharts }))
+);
 
 const chartFilename = { filename: "data-register-spectrometer" };
 const getChartTitle = (t: string) => ({ text: t });
@@ -68,10 +72,12 @@ export default function Step_DataRegister() {
     intensity: 90,
     concentration: 5,
   });
-  const epsilon = () =>
+  const epsilonData = createMemo(() =>
     calcEpsilon(
-      dataComputed(null, ([, v]) => (v.absorbance() / v.concentration))(),
-    );
+      dataComputed(null, ([, v]) => [v.concentration, v.absorbance()])(),
+    )
+  );
+  const epsilon = () => epsilonData()[0];
   const maxX = () =>
     Math.max(
       ...(dataComputed(null, ([, v]) => v.concentration)()),
@@ -146,68 +152,70 @@ export default function Step_DataRegister() {
           ADD
         </button>
       </div>
-      <div class="data-register-intensity">
-        <label>
-          <span>
-            Original Intensity
-          </span>
-          <input
-            type="number"
-            value={intensity()}
-            onChange={(e) => setIntensity(parseFloat(e.currentTarget.value))}
-          />
-        </label>
-      </div>
-      <div class="data-register-chart">
-        <SolidApexCharts
-          width="100%"
-          series={[{
-            name: "Absorbance",
-            type: "scatter",
-            data: dataComputed(null, ([_, v]) => ({
-              x: v.concentration,
-              y: v.absorbance(),
-            }))(),
-          }, {
-            name: "Line",
-            type: "line",
-            data: [{
-              x: 0,
-              y: 0,
+      <Suspense fallback={"Loading data..."}>
+        <div class="data-register-intensity">
+          <label>
+            <span>
+              Original Intensity
+            </span>
+            <input
+              type="number"
+              value={intensity()}
+              onChange={(e) => setIntensity(parseFloat(e.currentTarget.value))}
+            />
+          </label>
+        </div>
+        <div class="data-register-chart">
+          <SolidApexCharts
+            width="100%"
+            series={[{
+              name: "Absorbance",
+              type: "scatter",
+              data: dataComputed(null, ([_, v]) => ({
+                x: v.concentration,
+                y: v.absorbance(),
+              }))(),
             }, {
-              x: maxX() * 1.05,
-              y: epsilon() * maxX() * 1.05,
-            }],
-          }]}
-          type="line"
-          options={{
-            ...chartOptions,
+              name: "Line",
+              type: "line",
+              data: [{
+                x: 0,
+                y: 0,
+              }, {
+                x: maxX() * 1.05,
+                y: epsilon() * maxX() * 1.05,
+              }],
+            }]}
+            type="line"
+            options={{
+              ...chartOptions,
 
-            yaxis: {
-              ...chartOptions.yaxis,
-              max: Math.max(
-                ...(dataComputed(null, ([, v]) => v.absorbance())()),
-              ) * 1.05,
-            },
-            xaxis: {
-              ...chartOptions.xaxis,
-              max: maxX() * 1.05,
-            },
+              yaxis: {
+                ...chartOptions.yaxis,
+                max: Math.max(
+                  ...(dataComputed(null, ([, v]) => v.absorbance())()),
+                ) * 1.05,
+              },
+              xaxis: {
+                ...chartOptions.xaxis,
+                max: maxX() * 1.05,
+              },
+            }}
+          />
+        </div>
+        <DataTable
+          headers={headers}
+          data={data}
+          formatCell={(key, { value: _value }) => {
+            const value = _value() as number;
+            if (key === "wavelength") return value.toString();
+            return value.toPrecision(4);
+          }}
+          onDelete={(cell) => {
+            data.delete(cell.idx);
           }}
         />
-      </div>
-      <DataTable
-        headers={headers}
-        data={data}
-        formatCell={(key, { value: _value }) => {
-          const value = _value() as number;
-          if (key === "wavelength") return value.toString();
-          return value.toPrecision(4);
-        }}
-        onDelete={(cell) => {
-          data.delete(cell.idx);
-        }}
-      />
+      </Suspense>
     </div>
   );
 }
