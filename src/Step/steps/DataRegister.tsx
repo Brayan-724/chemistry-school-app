@@ -78,6 +78,7 @@ export default function Step_DataRegister() {
     )
   );
   const epsilon = () => epsilonData()[0];
+  const rSquared = () => epsilonData()[1];
   const maxX = () =>
     Math.max(
       ...(dataComputed(null, ([, v]) => v.concentration)()),
@@ -99,10 +100,10 @@ export default function Step_DataRegister() {
   });
 
   const headers = new Map<string, IDataTableHeader<IData, keyof IData>>();
-  headers.set("wavelength", {
-    title: ["Wavelength (nm)", "Wave (nm)", "W (nm)"],
-    cell: UpdateableCell({}),
-  });
+  // headers.set("wavelength", {
+  //   title: ["Wavelength (nm)", "Wave (nm)", "W (nm)"],
+  //   cell: UpdateableCell({}),
+  // });
   headers.set("intensity", {
     title: ["Intensity (lm)", "Int (lm)", "I (lm)"],
     cell: UpdateableCell({}),
@@ -137,7 +138,6 @@ export default function Step_DataRegister() {
   return (
     <div>
       <div class="data-register-form">
-        <FormInput title="Wavelength" key="wavelength" />
         <FormInput title="Intensity" key="intensity" />
         <FormInput title="Concentration" key="concentration" />
         <button
@@ -202,6 +202,14 @@ export default function Step_DataRegister() {
               },
             }}
           />
+          <p>
+            Epsilon:{" "}
+            {epsilon()}
+          </p>
+          <p>
+            R<sup>2</sup>:{" "}
+            {rSquared()}
+          </p>
         </div>
         <DataTable
           headers={headers}

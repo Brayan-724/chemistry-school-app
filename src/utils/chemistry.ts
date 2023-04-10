@@ -23,6 +23,5 @@ export function calcEpsilon(
 ): [epsilon: number, rSquared: number] {
   const linear = linearRegression([[0, 0], ...data]);
   const r2 = rSquared(data, linearRegressionLine(linear));
-  console.log(linear, r2);
   return [linear.m, r2];
 }
