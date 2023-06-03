@@ -11,7 +11,8 @@
   "devDependencies": {
     "vite": "^4.1.1",
     "vite-plugin-solid": "^2.5.0",
-    "vite-plugin-windicss": "^1.8.10"
+    "vite-plugin-windicss": "^1.8.10",
+    "workbox-window": "^7.0.0"
   },
   "dependencies": {
     "@solid-primitives/map": "^0.4.3",
@@ -22,6 +23,7 @@
     "simple-statistics": "^7.8.3",
     "solid-apexcharts": "^0.2.4",
     "solid-js": "^1.6.16",
+    "vite-plugin-pwa": "^0.16.3",
     "vite-tsconfig-paths": "^4.0.7"
   }
 }
