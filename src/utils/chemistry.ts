@@ -15,13 +15,14 @@ export function calcTransmitance(io: number, i: number): number {
 * T = i / io
 */
 export function calcAbsorbance(io: number, i: number): number {
-  return Math.log10(io / i);
+  return -Math.log10(i / io);
 }
 
 export function calcEpsilon(
   data: number[][],
-): [epsilon: number, rSquared: number] {
-  const linear = linearRegression([[0, 0], ...data]);
+): [epsilon: number, rSquared: number, bias: number] {
+  const linear = linearRegression(data);
   const r2 = rSquared(data, linearRegressionLine(linear));
-  return [linear.m, r2];
+  console.log(data, linear);
+  return [linear.m, r2, linear.b];
 }

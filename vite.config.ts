@@ -9,28 +9,28 @@ const pwaOptions: Partial<VitePWAOptions> = {
   base: "/",
   includeAssets: ["favicon.svg"],
   manifest: {
-    name: "PWA Router",
-    short_name: "PWA Router",
+    name: "Spectrometer App",
+    short_name: "Spectrometer App",
     theme_color: "#cc5b36",
     icons: [
       {
-        src: "/public/iconx/android-chrome-192x192.png",
+        src: "/iconx/android-chrome-192x192.png",
         sizes: "192x192",
         type: "image/png",
       },
       {
-        src: "/public/iconx/android-chrome-512x512.png",
+        src: "/iconx/android-chrome-512x512.png",
         sizes: "512x512",
         type: "image/png",
       },
       {
-        src: "/public/iconx/android-chrome-maskable-192x192.png",
+        src: "/iconx/android-chrome-maskable-192x192.png",
         sizes: "192x192",
         type: "image/png",
         purpose: "maskable",
       },
       {
-        src: "/public/iconx/android-chrome-maskable-512x512.png",
+        src: "/iconx/android-chrome-maskable-512x512.png",
         sizes: "512x512",
         type: "image/png",
         purpose: "maskable",

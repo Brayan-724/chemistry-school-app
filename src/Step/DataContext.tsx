@@ -13,8 +13,22 @@ import createLocalStorage from "@/utils/createLocalStore";
 import { createTrigger } from "@solid-primitives/trigger";
 import { calcAbsorbance } from "@/utils/chemistry";
 
+export const wavelengthFilter = (
+  color: "red" | "green" | "blue",
+) => [([, v]: [number, IData]) => v.wavelength === color] as const;
+
+export const WavelengthIdx = {
+  red: 0,
+  green: 1,
+  blue: 2,
+
+  0: "red",
+  1: "green",
+  2: "blue",
+} as const;
+
 export interface IData {
-  wavelength: number;
+  wavelength: "red" | "green" | "blue";
   intensity: number;
   absorbance: Accessor<number>;
   concentration: number;
@@ -22,12 +36,16 @@ export interface IData {
 }
 
 export type IDataContext = {
-  intensity: Accessor<number>;
-  setIntensity(newValue: number): void;
+  intensity: Accessor<number>[];
+  setIntensity(idx: number, newValue: number): void;
   data: Map<number, IData>;
   save: VoidFunction;
   createComputed<T>(
     key: null,
+    callback: (v: [number, IData]) => T,
+  ): Accessor<T[]>;
+  createComputed<T>(
+    filtered: readonly [(v: [number, IData]) => boolean],
     callback: (v: [number, IData]) => T,
   ): Accessor<T[]>;
   createComputed<T>(
@@ -39,46 +57,24 @@ export type IDataContext = {
 export const DataContext = createContext<IDataContext>();
 
 export function DataProvider(props: ParentProps) {
-  const [intensity, setIntensity] = createSignal(1);
+  const [redIntensity, setRedIntensity] = createSignal(1);
+  const [greenIntensity, setGreenIntensity] = createSignal(1);
+  const [blueIntensity, setBlueIntensity] = createSignal(1);
+  const toSaveIntensity =
+    () => [redIntensity(), greenIntensity(), blueIntensity()];
   const [savedIntensity, saveInstensity] = createLocalStorage(
     "intensity",
-    intensity,
+    toSaveIntensity,
   );
-  setIntensity(savedIntensity);
+
+  const s = savedIntensity();
+  setRedIntensity(s[0]);
+  setGreenIntensity(s[1]);
+  setBlueIntensity(s[2]);
 
   const [data, , save] = createLocalStorage<ReactiveMap<number, IData>>(
     "registry",
-    new ReactiveMap(
-      [[
-        0,
-        createReactiveData({
-          wavelength: 460,
-          intensity: 1.25,
-          concentration: 0.01,
-        }),
-      ], [
-        1,
-        createReactiveData({
-          wavelength: 460,
-          intensity: 1.5,
-          concentration: 0.02,
-        }),
-      ], [
-        2,
-        createReactiveData({
-          wavelength: 460,
-          intensity: 1.75,
-          concentration: 0.03,
-        }),
-      ], [
-        4,
-        createReactiveData({
-          wavelength: 460,
-          intensity: 2,
-          concentration: 0.04,
-        }),
-      ]],
-    ),
+    new ReactiveMap([]),
     (v) => {
       return JSON.stringify([...v.entries()]);
     },
@@ -96,10 +92,24 @@ export function DataProvider(props: ParentProps) {
   return (
     <DataContext.Provider
       value={{
-        intensity: intensity,
-        setIntensity: (v) => {
-          setIntensity(v);
-          saveInstensity(v);
+        intensity: [redIntensity, greenIntensity, blueIntensity],
+        setIntensity: (idx, v) => {
+          switch (idx) {
+            case 0:
+              setRedIntensity(v);
+              break;
+            case 1:
+              setGreenIntensity(v);
+              break;
+            case 2:
+              setBlueIntensity(v);
+              break;
+
+            default:
+              console.error("Unknown intensity index");
+              break;
+          }
+          saveInstensity(toSaveIntensity);
         },
         data,
         save,
@@ -110,6 +120,15 @@ export function DataProvider(props: ParentProps) {
           return createMemo(() => {
             if (key === null) {
               return [...data.entries()].map((v) => callback(v as _VALUE));
+            } else if (Array.isArray(key)) {
+              const o: any[] = [];
+              const filtered = key[0];
+              data.forEach((v, i) => {
+                const f = filtered([i, v]);
+                if (!f) return;
+                o.push(callback([i, v] as _VALUE));
+              });
+              return o;
             }
 
             const _key = key();
@@ -142,7 +161,9 @@ export function createReactiveData(
 
       track();
 
-      return calcAbsorbance(dataContext.intensity(), ret.intensity);
+      const w_idx = WavelengthIdx[ret.wavelength];
+
+      return calcAbsorbance(dataContext.intensity[w_idx](), ret.intensity);
     },
     update,
   };

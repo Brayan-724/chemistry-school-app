@@ -14,6 +14,54 @@
       padding: .3rem .5rem
       font-size: 1.1rem
 
+
+    > div
+      $select-border: #777
+      $select-focus: blue
+      $select-arrow: $select-border
+      display: grid
+      grid-template-areas: "select"
+      align-items: center
+      position: relative
+      min-width: 15ch
+
+      border: 1px solid $select-border
+      padding: 0.25em 0.5em
+
+      font-size: 1.25rem
+      cursor: pointer
+      line-height: 1.1
+
+      background-color: #fff
+      background-image: linear-gradient(to top, #f9f9f9, #fff 33%)
+
+      &:not(.select--multiple)::after 
+        grid-area: select
+        content: ""
+        justify-self: end
+        width: 0.8em
+        height: 0.5em
+        background-color: $select-arrow
+        clip-path: polygon(100% 0%, 0 0%, 50% 100%)
+
+      select 
+        grid-area: select
+        appearance: none
+        background-color: transparent
+        border: none
+        padding: 0 1em 0 0
+        margin: 0
+        width: 100%
+        font-family: inherit
+        font-size: inherit
+        cursor: inherit
+        line-height: inherit
+        z-index: 1
+        outline: none
+
+        &::-ms-expand
+          display: none
+
   button
     background: $accent-color
     color: white

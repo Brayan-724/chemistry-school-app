@@ -3,10 +3,15 @@ import { ApexOptions } from "apexcharts";
 import { DataTable } from "@/DataTable";
 import { IDataTableHeader } from "@/DataTable/context";
 import { createUpdateableCell } from "@/DataTable/UpdateableCell";
-import { createReactiveData, IData, useDataContext } from "../DataContext";
+import {
+  createReactiveData,
+  IData,
+  useDataContext,
+  wavelengthFilter,
+} from "../DataContext";
 import "./DataRegister.sass";
 import { calcEpsilon } from "@/utils/chemistry";
-import { createMemo, lazy, Suspense } from "solid-js";
+import { Accessor, createMemo, lazy, Suspense } from "solid-js";
 
 const SolidApexCharts = lazy(() =>
   import("solid-apexcharts").then((mod) => ({ default: mod.SolidApexCharts }))
@@ -33,6 +38,7 @@ const chartOptions: ApexOptions = {
       },
     },
   },
+  colors: ["#FF3030", "#40FF40", "#0050FF", "#000000"],
   fill: {
     type: "solid",
   },
@@ -57,7 +63,7 @@ const chartOptions: ApexOptions = {
     intersect: true,
   },
   markers: {
-    size: [6, 0],
+    size: [6, 6, 6, 0],
   },
   legend: {
     show: false,
@@ -65,13 +71,26 @@ const chartOptions: ApexOptions = {
 };
 
 export default function Step_DataRegister() {
-  const { data, intensity, setIntensity, save, createComputed: dataComputed } =
-    useDataContext()!;
+  const dataContext = useDataContext();
+  if (!dataContext) return null;
+  const {
+    data,
+    intensity,
+    setIntensity,
+    save,
+    createComputed: dataComputed,
+  } = dataContext;
   const [formData, setFormData] = createStore({
-    wavelength: 460,
-    intensity: 90,
-    concentration: 5,
+    wavelength: "red",
+    intensity: 1,
+    concentration: 1,
   });
+  function computeRed<T>(m: (v: IData) => T): Accessor<T[]> {
+    return dataComputed(wavelengthFilter("red"), ([, v]) => m(v));
+  }
+  const linearRed = createMemo(() =>
+    calcEpsilon(computeRed((v) => [v.concentration, v.absorbance()])())
+  );
   const epsilonData = createMemo(() =>
     calcEpsilon(
       dataComputed(null, ([, v]) => [v.concentration, v.absorbance()])(),
@@ -79,10 +98,9 @@ export default function Step_DataRegister() {
   );
   const epsilon = () => epsilonData()[0];
   const rSquared = () => epsilonData()[1];
+  const bias = () => epsilonData()[2];
   const maxX = () =>
-    Math.max(
-      ...(dataComputed(null, ([, v]) => v.concentration)()),
-    );
+    Math.max(...dataComputed(null, ([, v]) => v.concentration)());
   const UpdateableCell = createUpdateableCell<IData>({
     updateValue(cell, _, newValue) {
       cell.obj[cell.key] = newValue as any;
@@ -99,11 +117,24 @@ export default function Step_DataRegister() {
     },
   });
 
+  const WavelengthCell = createUpdateableCell<IData>({
+    select: { "Red": "red", "Green": "green", "Blue": "blue" },
+    updateValue(cell, _, newValue) {
+      cell.obj[cell.key] = newValue as any;
+      cell.obj.update();
+      save();
+    },
+    process(cell, { currentTarget }) {
+      console.log(currentTarget.value);
+      return [true, currentTarget.value];
+    },
+  });
+
   const headers = new Map<string, IDataTableHeader<IData, keyof IData>>();
-  // headers.set("wavelength", {
-  //   title: ["Wavelength (nm)", "Wave (nm)", "W (nm)"],
-  //   cell: UpdateableCell({}),
-  // });
+  headers.set("wavelength", {
+    title: ["Wavelength (nm)", "Wave (nm)", "W (nm)"],
+    cell: WavelengthCell({}),
+  });
   headers.set("intensity", {
     title: ["Intensity (lm)", "Int (lm)", "I (lm)"],
     cell: UpdateableCell({}),
@@ -116,13 +147,9 @@ export default function Step_DataRegister() {
     cell: UpdateableCell({}),
   });
 
-  const FormInput = (
-    props: { title: string; key: keyof typeof formData },
-  ) => (
+  const FormInput = (props: { title: string; key: keyof typeof formData }) => (
     <label>
-      <span>
-        {props.title}
-      </span>
+      <span>{props.title}</span>
       <input
         type="number"
         value={formData[props.key]}
@@ -135,11 +162,30 @@ export default function Step_DataRegister() {
     </label>
   );
 
+  const FormSelect = (props: { title: string; key: keyof typeof formData }) => (
+    <label>
+      <span>{props.title}</span>
+      <div>
+        <select
+          value={formData[props.key]}
+          onChange={(e) => {
+            setFormData((f) => ({ ...f, [props.key]: e.currentTarget.value }));
+          }}
+        >
+          <option value="red">Red</option>
+          <option value="green">Green</option>
+          <option value="blue">Blue</option>
+        </select>
+      </div>
+    </label>
+  );
+
   return (
     <div>
       <div class="data-register-form">
         <FormInput title="Intensity" key="intensity" />
         <FormInput title="Concentration" key="concentration" />
+        <FormSelect title="Wavelength" key="wavelength" />
         <button
           onClick={() =>
             data.set(
@@ -154,47 +200,98 @@ export default function Step_DataRegister() {
       </div>
       <Suspense fallback={"Loading data..."}>
         <div class="data-register-intensity">
-          <label>
-            <span>
-              Original Intensity
-            </span>
-            <input
-              type="number"
-              value={intensity()}
-              onChange={(e) => setIntensity(parseFloat(e.currentTarget.value))}
-            />
-          </label>
+          <span>Original Intensity</span>
+          <div>
+            <label>
+              <span>Red</span>
+              <input
+                type="number"
+                value={intensity[0]()}
+                onChange={(e) =>
+                  setIntensity(0, parseFloat(e.currentTarget.value))}
+              />
+            </label>
+            <label>
+              <span>Green</span>
+              <input
+                type="number"
+                value={intensity[1]()}
+                onChange={(e) =>
+                  setIntensity(1, parseFloat(e.currentTarget.value))}
+              />
+            </label>
+            <label>
+              <span>Blue</span>
+              <input
+                type="number"
+                value={intensity[2]()}
+                onChange={(e) =>
+                  setIntensity(2, parseFloat(e.currentTarget.value))}
+              />
+            </label>
+          </div>
         </div>
         <div class="data-register-chart">
           <SolidApexCharts
             width="100%"
-            series={[{
-              name: "Absorbance",
-              type: "scatter",
-              data: dataComputed(null, ([_, v]) => ({
-                x: v.concentration,
-                y: v.absorbance(),
-              }))(),
-            }, {
-              name: "Line",
-              type: "line",
-              data: [{
-                x: 0,
-                y: 0,
-              }, {
-                x: maxX() * 1.05,
-                y: epsilon() * maxX() * 1.05,
-              }],
-            }]}
+            series={[
+              {
+                name: "Red Absorbance",
+                type: "scatter",
+                data: dataComputed(
+                  wavelengthFilter("red"),
+                  ([_, v]) => ({
+                    x: v.concentration,
+                    y: v.absorbance(),
+                  }),
+                )(),
+              },
+              {
+                name: "Green Absorbance",
+                type: "scatter",
+                data: dataComputed(
+                  wavelengthFilter("green"),
+                  ([_, v]) => ({
+                    x: v.concentration,
+                    y: v.absorbance(),
+                  }),
+                )(),
+              },
+              {
+                name: "Blue Absorbance",
+                type: "scatter",
+                data: dataComputed(
+                  wavelengthFilter("blue"),
+                  ([_, v]) => ({
+                    x: v.concentration,
+                    y: v.absorbance(),
+                  }),
+                )(),
+              },
+              {
+                name: "Line",
+                type: "line",
+                data: [
+                  {
+                    x: 0,
+                    y: 0,
+                  },
+                  {
+                    x: maxX() * 1.05,
+                    y: maxX() * epsilon() * 1.05 + bias(),
+                  },
+                ],
+              },
+            ]}
             type="line"
             options={{
               ...chartOptions,
 
               yaxis: {
                 ...chartOptions.yaxis,
-                max: Math.max(
-                  ...(dataComputed(null, ([, v]) => v.absorbance())()),
-                ) * 1.05,
+                max:
+                  Math.max(...dataComputed(null, ([, v]) => v.absorbance())()) *
+                  1.05,
               },
               xaxis: {
                 ...chartOptions.xaxis,
@@ -202,13 +299,9 @@ export default function Step_DataRegister() {
               },
             }}
           />
+          <p>Epsilon: {epsilon()}</p>
           <p>
-            Epsilon:{" "}
-            {epsilon()}
-          </p>
-          <p>
-            R<sup>2</sup>:{" "}
-            {rSquared()}
+            R<sup>2</sup>: {rSquared()}
           </p>
         </div>
         <DataTable
