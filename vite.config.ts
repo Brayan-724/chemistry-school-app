@@ -7,7 +7,7 @@ import type { ManifestOptions, VitePWAOptions } from "vite-plugin-pwa";
 const pwaOptions: Partial<VitePWAOptions> = {
   mode: "development",
   base: "/",
-  includeAssets: ["favicon.svg"],
+  includeAssets: ["favicon.ico"],
   manifest: {
     name: "Spectrometer App",
     short_name: "Spectrometer App",

@@ -36,7 +36,13 @@ export interface IData {
 }
 
 export type IDataContext = {
-  intensity: Accessor<number>[];
+  selectedWaves: readonly [
+    Accessor<boolean>,
+    Accessor<boolean>,
+    Accessor<boolean>,
+  ];
+  setSelectedWave(idx: number, newValue: boolean): void;
+  intensity: readonly [Accessor<number>, Accessor<number>, Accessor<number>];
   setIntensity(idx: number, newValue: number): void;
   data: Map<number, IData>;
   save: VoidFunction;
@@ -56,21 +62,80 @@ export type IDataContext = {
 
 export const DataContext = createContext<IDataContext>();
 
-export function DataProvider(props: ParentProps) {
-  const [redIntensity, setRedIntensity] = createSignal(1);
-  const [greenIntensity, setGreenIntensity] = createSignal(1);
-  const [blueIntensity, setBlueIntensity] = createSignal(1);
-  const toSaveIntensity =
-    () => [redIntensity(), greenIntensity(), blueIntensity()];
-  const [savedIntensity, saveInstensity] = createLocalStorage(
+function createIntensityController() {
+  const [red, setRed] = createSignal(1);
+  const [green, setGreen] = createSignal(1);
+  const [blue, setBlue] = createSignal(1);
+  const [redSelected, setRedSelected] = createSignal(false);
+  const [greenSelected, setGreenSelected] = createSignal(false);
+  const [blueSelected, setBlueSelected] = createSignal(false);
+
+  const toSaveIntensity = () => [red(), green(), blue()];
+  const [savedIntensity, saveIntensity] = createLocalStorage(
     "intensity",
     toSaveIntensity,
   );
+  const toSaveSelected = () => [redSelected(), greenSelected(), blueSelected()];
+  const [savedSelected, saveSelected] = createLocalStorage(
+    "selected",
+    toSaveSelected,
+  );
 
-  const s = savedIntensity();
-  setRedIntensity(s[0]);
-  setGreenIntensity(s[1]);
-  setBlueIntensity(s[2]);
+  function setIntensity(idx: number, val: number) {
+    switch (idx) {
+      case 0:
+        setRed(val);
+        break;
+      case 1:
+        setGreen(val);
+        break;
+      case 2:
+        setBlue(val);
+        break;
+
+      default:
+        console.error("Unknown intensity index");
+        break;
+    }
+    saveIntensity(toSaveIntensity);
+  }
+  function setSelected(idx: number, val: boolean) {
+    switch (idx) {
+      case 0:
+        setRedSelected(val);
+        break;
+      case 1:
+        setGreenSelected(val);
+        break;
+      case 2:
+        setBlueSelected(val);
+        break;
+
+      default:
+        console.error("Unknown intensity index");
+        break;
+    }
+    saveSelected(toSaveSelected);
+  }
+
+  const s1 = savedSelected();
+  setRedSelected(s1[0]);
+  setGreenSelected(s1[1]);
+  setBlueSelected(s1[2]);
+
+  const s2 = savedIntensity();
+  setRed(s2[0]);
+  setGreen(s2[1]);
+  setBlue(s2[2]);
+
+  const i = [red, green, blue] as const;
+  const s = [redSelected, greenSelected, blueSelected] as const;
+  return [i, s, setIntensity, setSelected] as const;
+}
+
+export function DataProvider(props: ParentProps) {
+  const [intensity, selected, setIntensity, setSelected] =
+    createIntensityController();
 
   const [data, , save] = createLocalStorage<ReactiveMap<number, IData>>(
     "registry",
@@ -92,25 +157,10 @@ export function DataProvider(props: ParentProps) {
   return (
     <DataContext.Provider
       value={{
-        intensity: [redIntensity, greenIntensity, blueIntensity],
-        setIntensity: (idx, v) => {
-          switch (idx) {
-            case 0:
-              setRedIntensity(v);
-              break;
-            case 1:
-              setGreenIntensity(v);
-              break;
-            case 2:
-              setBlueIntensity(v);
-              break;
-
-            default:
-              console.error("Unknown intensity index");
-              break;
-          }
-          saveInstensity(toSaveIntensity);
-        },
+        intensity,
+        selectedWaves: selected,
+        setIntensity,
+        setSelectedWave: setSelected,
         data,
         save,
         createComputed(key, callback) {

@@ -38,7 +38,7 @@ const chartOptions: ApexOptions = {
       },
     },
   },
-  colors: ["#FF3030", "#40FF40", "#0050FF", "#000000"],
+  colors: ["#FF3030", "#40FF40", "#0050FF", "#AA4422", "#44AA44", "#2244AA"],
   fill: {
     type: "solid",
   },
@@ -63,7 +63,7 @@ const chartOptions: ApexOptions = {
     intersect: true,
   },
   markers: {
-    size: [6, 6, 6, 0],
+    size: [6, 6, 6, 0, 0, 0],
   },
   legend: {
     show: false,
@@ -88,17 +88,21 @@ export default function Step_DataRegister() {
   function computeRed<T>(m: (v: IData) => T): Accessor<T[]> {
     return dataComputed(wavelengthFilter("red"), ([, v]) => m(v));
   }
+  function computeGreen<T>(m: (v: IData) => T): Accessor<T[]> {
+    return dataComputed(wavelengthFilter("green"), ([, v]) => m(v));
+  }
+  function computeBlue<T>(m: (v: IData) => T): Accessor<T[]> {
+    return dataComputed(wavelengthFilter("blue"), ([, v]) => m(v));
+  }
   const linearRed = createMemo(() =>
     calcEpsilon(computeRed((v) => [v.concentration, v.absorbance()])())
   );
-  const epsilonData = createMemo(() =>
-    calcEpsilon(
-      dataComputed(null, ([, v]) => [v.concentration, v.absorbance()])(),
-    )
+  const linearGreen = createMemo(() =>
+    calcEpsilon(computeGreen((v) => [v.concentration, v.absorbance()])())
   );
-  const epsilon = () => epsilonData()[0];
-  const rSquared = () => epsilonData()[1];
-  const bias = () => epsilonData()[2];
+  const linearBlue = createMemo(() =>
+    calcEpsilon(computeBlue((v) => [v.concentration, v.absorbance()])())
+  );
   const maxX = () =>
     Math.max(...dataComputed(null, ([, v]) => v.concentration)());
   const UpdateableCell = createUpdateableCell<IData>({
@@ -120,12 +124,11 @@ export default function Step_DataRegister() {
   const WavelengthCell = createUpdateableCell<IData>({
     select: { "Red": "red", "Green": "green", "Blue": "blue" },
     updateValue(cell, _, newValue) {
-      cell.obj[cell.key] = newValue as any;
+      cell.obj.wavelength = newValue as any;
       cell.obj.update();
       save();
     },
-    process(cell, { currentTarget }) {
-      console.log(currentTarget.value);
+    process(_, { currentTarget }) {
       return [true, currentTarget.value];
     },
   });
@@ -180,6 +183,32 @@ export default function Step_DataRegister() {
     </label>
   );
 
+  const IntensityHeaderItem = (
+    props: { idx: number; title: string; linear: number[] },
+  ) => (
+    <label>
+      <label>
+        <span>
+          {props.title}
+        </span>
+        <span>
+          E: {" "}
+          {props.linear[0].toPrecision(7)}
+        </span>
+        <span>
+          R: {" "}
+          {props.linear[1].toPrecision(7)}
+        </span>
+      </label>
+      <input
+        type="number"
+        value={intensity[props.idx]()}
+        onChange={(e) =>
+          setIntensity(props.idx, parseFloat(e.currentTarget.value))}
+      />
+    </label>
+  );
+
   return (
     <div>
       <div class="data-register-form">
@@ -202,33 +231,13 @@ export default function Step_DataRegister() {
         <div class="data-register-intensity">
           <span>Original Intensity</span>
           <div>
-            <label>
-              <span>Red</span>
-              <input
-                type="number"
-                value={intensity[0]()}
-                onChange={(e) =>
-                  setIntensity(0, parseFloat(e.currentTarget.value))}
-              />
-            </label>
-            <label>
-              <span>Green</span>
-              <input
-                type="number"
-                value={intensity[1]()}
-                onChange={(e) =>
-                  setIntensity(1, parseFloat(e.currentTarget.value))}
-              />
-            </label>
-            <label>
-              <span>Blue</span>
-              <input
-                type="number"
-                value={intensity[2]()}
-                onChange={(e) =>
-                  setIntensity(2, parseFloat(e.currentTarget.value))}
-              />
-            </label>
+            <IntensityHeaderItem idx={0} title={"Red"} linear={linearRed()} />
+            <IntensityHeaderItem
+              idx={1}
+              title={"Green"}
+              linear={linearGreen()}
+            />
+            <IntensityHeaderItem idx={2} title={"Blue"} linear={linearBlue()} />
           </div>
         </div>
         <div class="data-register-chart">
@@ -268,20 +277,9 @@ export default function Step_DataRegister() {
                   }),
                 )(),
               },
-              {
-                name: "Line",
-                type: "line",
-                data: [
-                  {
-                    x: 0,
-                    y: 0,
-                  },
-                  {
-                    x: maxX() * 1.05,
-                    y: maxX() * epsilon() * 1.05 + bias(),
-                  },
-                ],
-              },
+              generateLine("Line Red", maxX, linearRed),
+              generateLine("Line Green", maxX, linearGreen),
+              generateLine("Line Blue", maxX, linearBlue),
             ]}
             type="line"
             options={{
@@ -299,10 +297,6 @@ export default function Step_DataRegister() {
               },
             }}
           />
-          <p>Epsilon: {epsilon()}</p>
-          <p>
-            R<sup>2</sup>: {rSquared()}
-          </p>
         </div>
         <DataTable
           headers={headers}
@@ -319,4 +313,25 @@ export default function Step_DataRegister() {
       </Suspense>
     </div>
   );
+}
+
+function generateLine(
+  title: string,
+  max: Accessor<number>,
+  linear: Accessor<number[]>,
+) {
+  return {
+    name: title,
+    type: "line",
+    data: [
+      {
+        x: 0,
+        y: 0,
+      },
+      {
+        x: max() * 1.05,
+        y: max() * linear()[0] * 1.05 + linear()[2],
+      },
+    ],
+  };
 }

@@ -23,6 +23,8 @@ export function calcEpsilon(
 ): [epsilon: number, rSquared: number, bias: number] {
   const linear = linearRegression(data);
   const r2 = rSquared(data, linearRegressionLine(linear));
-  console.log(data, linear);
-  return [linear.m, r2, linear.b];
+  const m = Number.isNaN(linear.m) ? 0 : linear.m;
+  const b = Number.isNaN(linear.b) ? 0 : linear.b;
+  console.log(m, b)
+  return [m, r2, b];
 }

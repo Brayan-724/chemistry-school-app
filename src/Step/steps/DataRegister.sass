@@ -16,14 +16,21 @@ $accent-color: #cc5b36
   margin: 0 auto
 
   > div
+    width: 100%
+    max-width: 100vw
     display: flex
+    justify-content: space-between
+    flex-wrap: wrap
     gap: 0.5rem
 
   label
     min-width: 100px
-    max-width: 500px
+    width: 100%
     display: flex
     flex-direction: column
+
+    @media (min-width: 720px)
+      max-width: 200px
 
     input
       padding: .3rem .5rem
